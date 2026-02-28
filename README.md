@@ -152,6 +152,131 @@ AI sẽ tự động tải các file tham chiếu phù hợp dựa trên câu h�
 
 ---
 
+## ISO/IEC 25010 Quality Standards / Tiêu chuẩn chất lượng ISO/IEC 25010
+
+**English:**
+The skill applies ISO/IEC 25010 (SQuaRE — Systems and Software Quality Requirements and Evaluation) as the quality framework. All 7 characteristics with their sub-characteristics are mapped to concrete WPF C# patterns, giving teams a traceable link between quality requirements and code decisions.
+
+**Tiếng Việt:**
+Skill áp dụng ISO/IEC 25010 (SQuaRE — Yêu cầu và đánh giá chất lượng hệ thống và phần mềm) làm khung chất lượng. Toàn bộ 7 đặc tính cùng các đặc tính con được ánh xạ sang mẫu WPF C# cụ thể, giúp nhóm có liên kết có thể truy vết giữa yêu cầu chất lượng và quyết định code.
+
+### 1. Functional Suitability / Tính phù hợp chức năng
+
+Sub-characteristics: Functional Completeness, Functional Correctness, Functional Appropriateness
+
+| Sub-characteristic | WPF Implementation |
+|-------------------|-------------------|
+| Functional Correctness | 100% unit test coverage on battery health formula, SMART scoring algorithm |
+| Functional Completeness | All 13 WMI classes documented and tested; all hardware test types covered |
+| Functional Appropriateness | TDD pattern ensures features match requirements before implementation |
+
+**EN:** Critical calculations (battery health, SMART score) require 100% test coverage. The BatteryLifePrediction TDD pattern in `testing-patterns.md` demonstrates this approach.
+
+**VI:** Các phép tính quan trọng (sức khỏe pin, điểm SMART) yêu cầu độ phủ test 100%. Mẫu TDD BatteryLifePrediction trong `testing-patterns.md` minh họa cách tiếp cận này.
+
+### 2. Reliability / Độ tin cậy
+
+Sub-characteristics: Maturity, Availability, Fault Tolerance, Recoverability
+
+| Sub-characteristic | WPF Implementation |
+|-------------------|-------------------|
+| Fault Tolerance | `async void` try/catch, graceful WMI fallbacks, `Result<T>` pattern |
+| Recoverability | `DispatcherUnhandledException` global handler, allow user to save results after error |
+| Availability | IDisposable cleanup prevents resource exhaustion; WMI caching reduces query failures |
+| Maturity | Multi-layer RAM fallback (WMI → Kernel32 → ComputerSystem); SMART fallback chain |
+
+**EN:** Every WMI query must have a fallback. Every `async void` must have try/catch. The `error-handling.md` file covers the full exception hierarchy for hardware access.
+
+**VI:** Mọi truy vấn WMI phải có fallback. Mọi `async void` phải có try/catch. File `error-handling.md` bao gồm toàn bộ phân cấp exception cho truy cập phần cứng.
+
+### 3. Performance Efficiency / Hiệu quả hiệu năng
+
+Sub-characteristics: Time Behaviour, Resource Utilization, Capacity
+
+| Sub-characteristic | WPF Implementation |
+|-------------------|-------------------|
+| Time Behaviour | Median of 5+ benchmark runs to filter thermal throttle spikes |
+| Resource Utilization | `ManagementObjectSearcher` caching; `computer.Close()` in Dispose; WMI TTL cache |
+| Capacity | `VirtualizingStackPanel` with Recycling mode for lists of 100+ items |
+
+**EN:** Never create `ManagementObjectSearcher` in a loop. Always use median (not average) for benchmark scores. See `performance.md` for the full caching and disposal patterns.
+
+**VI:** Không bao giờ tạo `ManagementObjectSearcher` trong vòng lặp. Luôn dùng trung vị (không phải trung bình) cho điểm benchmark. Xem `performance.md` để biết đầy đủ mẫu cache và disposal.
+
+### 4. Usability / Khả năng sử dụng
+
+Sub-characteristics: Appropriateness Recognizability, Learnability, Operability, User Error Protection, Accessibility, User Interface Aesthetics
+
+| Sub-characteristic | WPF Implementation |
+|-------------------|-------------------|
+| Accessibility | `AutomationProperties.Name` on all icon-only buttons; keyboard navigation via Button style |
+| Operability | `IsBusy` + `CancellationToken` for all long operations; progress reporting via `IProgress<T>` |
+| User Error Protection | Input validation before hardware tests; admin rights check before elevation-required features |
+| Learnability | Localization completeness — all user-visible strings via `DynamicResource` |
+
+**EN:** Interactive `Border` elements must be converted to `Button` with custom style for keyboard accessibility. Technical units (MHz, GB, Wh) are never localized — they are international standards.
+
+**VI:** Các phần tử `Border` tương tác phải được chuyển thành `Button` với style tùy chỉnh để có thể điều hướng bằng bàn phím. Đơn vị kỹ thuật (MHz, GB, Wh) không bao giờ được dịch — chúng là tiêu chuẩn quốc tế.
+
+### 5. Security / Bảo mật
+
+Sub-characteristics: Confidentiality, Integrity, Non-repudiation, Authenticity, Accountability
+
+| Sub-characteristic | WPF Implementation |
+|-------------------|-------------------|
+| Integrity | Anti-fake validation: CPU clock range check, WMI vs Registry cross-validation |
+| Authenticity | VM detection (Hyper-V, VMware, VirtualBox, QEMU, Parallels) to flag non-physical hardware |
+| Accountability | `ILogger` structured logging for all hardware access and test results |
+| Confidentiality | No hardcoded secrets; admin rights detection with graceful degradation |
+
+**EN:** The skill distinguishes safe monitoring tools (CPU-Z, HWiNFO, GPU-Z) from spoofing tools (DMIEdit, RWEverything, HWIDChanger). See `hardware-testing.md` for the anti-fake detection patterns.
+
+**VI:** Skill phân biệt công cụ giám sát an toàn (CPU-Z, HWiNFO, GPU-Z) với công cụ giả mạo (DMIEdit, RWEverything, HWIDChanger). Xem `hardware-testing.md` để biết mẫu phát hiện chống giả mạo.
+
+### 6. Maintainability / Khả năng bảo trì
+
+Sub-characteristics: Modularity, Reusability, Analysability, Modifiability, Testability
+
+| Sub-characteristic | WPF Implementation |
+|-------------------|-------------------|
+| Modularity | MVVM separation; interface-first design; no service duplication |
+| Testability | `IWmiService` abstraction; Moq-compatible interfaces for all hardware services |
+| Modifiability | `FeatureGateService` for license-based feature control without code changes |
+| Reusability | `TestResultsStore` singleton; `NavigationService` interface reusable across ViewModels |
+| Analysability | Scoring consistency: QuickTest verdict must equal Full Report verdict for same hardware state |
+
+**EN:** Every service that touches hardware must have an `IServiceName` interface. This is non-negotiable — it is what makes unit testing possible without real hardware.
+
+**VI:** Mọi service chạm vào phần cứng phải có interface `IServiceName`. Đây là điều bắt buộc — đây là điều làm cho unit test có thể thực hiện mà không cần phần cứng thật.
+
+### 7. Portability / Tính di động
+
+Sub-characteristics: Adaptability, Installability, Replaceability
+
+| Sub-characteristic | WPF Implementation |
+|-------------------|-------------------|
+| Adaptability | WinPE compatibility checklist: no installer dependencies, offline operation, no AppData reliance |
+| Installability | No hardcoded paths; Registry-based dynamic path detection for external tools |
+| Replaceability | `IWmiService`, `IHardwareService` interfaces allow swapping implementations |
+
+**EN:** WinPE is a minimal Windows environment with no user profile, no AppData, and limited services. The skill includes a WinPE compatibility checklist in `hardware-testing.md`.
+
+**VI:** WinPE là môi trường Windows tối giản không có user profile, không có AppData, và dịch vụ hạn chế. Skill bao gồm danh sách kiểm tra tương thích WinPE trong `hardware-testing.md`.
+
+### ISO 25010 Test Coverage Summary / Tóm tắt độ phủ test ISO 25010
+
+| Characteristic | Test Approach | Coverage Target |
+|---------------|---------------|-----------------|
+| Functional Suitability | Unit tests with Moq | 100% critical calculations, 80% business logic |
+| Reliability | Unit tests for all fallback paths | All exception handlers covered |
+| Performance Efficiency | Benchmark tests, median measurement | 5+ runs per benchmark |
+| Usability | AutomationProperties, keyboard nav tests | All interactive controls |
+| Security | Anti-fake validation tests, VM detection | All validation rules |
+| Maintainability | Scoring consistency tests | QuickTest = Full Report |
+| Portability | WinPE checklist, path-independence tests | No hardcoded paths |
+
+---
+
 ## Validation / Kiểm tra
 
 **English:**
